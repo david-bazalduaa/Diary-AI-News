@@ -1,0 +1,74 @@
+# config/sources.yaml
+
+settings:
+  max_articles_per_source: 5
+  similarity_threshold: 0.85
+  target_language: "en"
+
+keywords:
+  positive:
+    - "llm"
+    - "generative ai"
+    - "nlp"
+    - "computer vision"
+    - "opencv"
+    - "mlops"
+    - "pipeline"
+    - "startup"
+    - "funding"
+    - "open source"
+    - "release"
+    - "weights"
+  negative:
+    - "crypto"
+    - "bitcoin"
+    - "stock market"
+    - "nft"
+    - "elon musk"
+    - "politics"
+
+feeds:
+  # Official Blogs (Highest Priority / Weight)
+  - name: "Google Research Blog"
+    url: "https://blog.research.google/feeds/posts/default?alt=rss"
+    default_category: "AI Research"
+    weight: 50
+    is_official: true
+
+  - name: "Hugging Face Blog"
+    url: "https://huggingface.co/blog/feed.xml"
+    default_category: "Machine Learning / Open Source"
+    weight: 45
+    is_official: true
+
+  - name: "AWS Machine Learning Blog"
+    url: "https://aws.amazon.com/blogs/machinelearning/feed/"
+    default_category: "MLOps / Cloud"
+    weight: 45
+    is_official: true
+
+  # News & Startups (Medium Priority)
+  - name: "TechCrunch AI"
+    url: "https://techcrunch.com/category/artificial-intelligence/feed/"
+    default_category: "Startups & Business"
+    weight: 30
+    is_official: false
+
+  - name: "VentureBeat AI"
+    url: "https://venturebeat.com/category/ai/feed/"
+    default_category: "AI News"
+    weight: 30
+    is_official: false
+
+  # Data Science & Tutorials
+  - name: "KDnuggets"
+    url: "https://www.kdnuggets.com/feed"
+    default_category: "Data Science"
+    weight: 35
+    is_official: false
+
+  - name: "MIT Technology Review - AI"
+    url: "https://www.technologyreview.com/topic/artificial-intelligence/feed/"
+    default_category: "Deep Dives"
+    weight: 40
+    is_official: false
