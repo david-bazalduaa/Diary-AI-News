@@ -39,7 +39,7 @@ def generate_summary(title, content):
         
         # Call the model using the updated 2026 syntax
         response = client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='gemini-2.5-flash',
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.3 # Keep responses deterministic and professional
