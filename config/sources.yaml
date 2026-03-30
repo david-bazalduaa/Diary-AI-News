@@ -7,25 +7,58 @@ settings:
 
 keywords:
   positive:
+    # Core AI, Models & Architecture
     - "llm"
     - "generative ai"
+    - "foundation model"
+    - "transformer"
+    - "rag"
+    - "agentic"
+    - "fine-tuning"
+    
+    # Specific Domains & Techniques
     - "nlp"
     - "computer vision"
     - "opencv"
+    - "ocr"
+    - "information extraction"
+    - "deep learning"
+    
+    # Engineering, Data & Infrastructure
     - "mlops"
     - "pipeline"
-    - "startup"
-    - "funding"
+    - "aws"
+    - "sagemaker"
+    - "snowflake"
+    - "python"
+    - "power bi"
+    - "serverless"
+    
+    # Industry, Open Source & Releases
     - "open source"
     - "release"
-    - "weights"
+    - "sota"
+    - "state-of-the-art"
+    - "startup"
+    - "funding"
+    - "github"
+
   negative:
+    # Hype & Tech Noise
     - "crypto"
     - "bitcoin"
-    - "stock market"
     - "nft"
+    - "web3"
+    - "metaverse"
+    
+    # Drama, Gossip & Non-technical
     - "elon musk"
+    - "sam altman fired"
     - "politics"
+    - "lawsuit"
+    - "regulation"
+    - "stock market"
+    - "rumor"
 
 feeds:
   # Official Blogs (Highest Priority / Weight)
