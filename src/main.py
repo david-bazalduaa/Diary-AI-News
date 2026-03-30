@@ -28,7 +28,7 @@ def main():
 
     # Step 2: Extraction
     logging.info("Step 1/5: Extracting recent articles...")
-    max_hours = 24
+    max_hours = 72
     raw_articles = fetch_recent_articles(config['feeds'], max_hours=max_hours)
     
     if not raw_articles:
