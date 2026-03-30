@@ -1,14 +1,18 @@
 import yaml
 import feedparser
+import requests
 import logging
 from datetime import datetime, timedelta
 from time import mktime
 
-# Configure logging for production-level monitoring
+# Configure logging
 logging.basicConfig(
     level=logging.INFO, 
     format='%(asctime)s - %(levelname)s - %(module)s - %(message)s'
 )
+
+# Realistic User-Agent to bypass CDNs
+USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 def load_config(config_path="config/sources.yaml"):
     """
@@ -26,41 +30,51 @@ def load_config(config_path="config/sources.yaml"):
         logging.error(f"Error parsing YAML file: {e}")
         return None
 
-def fetch_recent_articles(feeds_config, max_hours=24):
+def fetch_recent_articles(feeds_config, max_hours=72):
     """
-    Fetches articles from a list of RSS feeds published within the specified timeframe.
+    Fetches articles using 'requests' for HTTP robustness, then parses with 'feedparser'.
     """
     extracted_articles = []
-    time_threshold = datetime.utcnow() - timedelta(hours=max_hours)
+    time_threshold = datetime.now() - timedelta(hours=max_hours)
+
+    # Use a requests Session for better performance and consistent headers
+    session = requests.Session()
+    session.headers.update({"User-Agent": USER_AGENT})
 
     for feed in feeds_config:
         logging.info(f"Fetching RSS feed: {feed['name']}")
         
         try:
-            # feedparser handles the HTTP request and XML parsing
-            parsed_feed = feedparser.parse(feed['url'])
+            # 1. Fetch the raw XML string using the robust 'requests' library
+            response = session.get(feed['url'], timeout=15)
+            response.raise_for_status() # Raise error if HTTP fails (e.g., 404, 403)
+            raw_xml = response.text
             
-            # Check if the feed was fetched successfully
-            if parsed_feed.bozo:
-                logging.warning(f"Malformed XML in feed {feed['name']}, but attempting to parse anyway.")
-
+            # 2. Parse the raw string with feedparser
+            parsed_feed = feedparser.parse(raw_xml)
+            
+            raw_entries_count = len(parsed_feed.entries)
+            logging.info(f"--> Found {raw_entries_count} raw entries in {feed['name']}")
+            
             for entry in parsed_feed.entries:
-                # Standardize publication date
+                published_dt = None
+                
+                # Robust date parsing
                 if hasattr(entry, 'published_parsed') and entry.published_parsed:
                     published_dt = datetime.fromtimestamp(mktime(entry.published_parsed))
                 elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
                     published_dt = datetime.fromtimestamp(mktime(entry.updated_parsed))
-                else:
-                    logging.debug(f"Skipping article '{entry.title}' due to missing date.")
-                    continue
+                
+                # If a blog forgets to put a date, assume it's new
+                if not published_dt:
+                    logging.debug(f"Article '{entry.title}' has no date. Assuming it's new.")
+                    published_dt = datetime.now()
 
-                # Filter out old articles
                 if published_dt >= time_threshold:
                     article_data = {
                         "title": entry.title,
                         "link": entry.link,
-                        # Some feeds use 'description' instead of 'summary'
-                        "summary": getattr(entry, 'summary', getattr(entry, 'description', '')),
+                        "summary": getattr(entry, 'summary', getattr(entry, 'description', 'No summary available.')),
                         "published_at": published_dt.isoformat(),
                         "source_name": feed['name'],
                         "category": feed['default_category'],
@@ -68,22 +82,17 @@ def fetch_recent_articles(feeds_config, max_hours=24):
                     }
                     extracted_articles.append(article_data)
                     
+        except requests.exceptions.RequestException as req_err:
+            logging.error(f"HTTP Request failed for {feed['name']}: {req_err}")
         except Exception as e:
             logging.error(f"Critical failure while processing feed {feed['name']}: {e}")
 
-    logging.info(f"Extraction complete. Total recent articles found: {len(extracted_articles)}")
+    logging.info(f"Extraction complete. Total recent articles found (last {max_hours}h): {len(extracted_articles)}")
     return extracted_articles
 
 if __name__ == "__main__":
-    # Quick test execution
+    # Test execution
     config = load_config()
-    
     if config and "feeds" in config:
-        recent_news = fetch_recent_articles(config["feeds"], max_hours=24)
-        
-        if recent_news:
-            print("\n--- Sample Extracted Article ---")
-            print(f"Title: {recent_news[0]['title']}")
-            print(f"Source: {recent_news[0]['source_name']}")
-            print(f"Link: {recent_news[0]['link']}")
-            print(f"Date: {recent_news[0]['published_at']}")
+        recent_news = fetch_recent_articles(config["feeds"], max_hours=72)
+        print(f"\nTest finished. Kept {len(recent_news)} articles.")
